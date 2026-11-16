@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>WUBBLE DASH</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+html,body{height:100%}
+body{font-family:Arial,sans-serif;background:linear-gradient(180deg,#101a4d,#1c2f78 60%,#101a4d);color:#fff;overflow:hidden}
+.screen{display:none;height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:10px;overflow-y:auto}
+.screen.active{display:flex}
+h1{text-align:center;font-size:clamp(1.5rem,6vw,3rem);letter-spacing:4px;text-shadow:0 4px 0 #081030,0 0 30px rgba(90,160,255,.7);margin-bottom:4px}
+.sub{text-align:center;color:#bcd;margin-bottom:16px}
+.row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.side-btn{width:clamp(88px,16vw,140px);height:clamp(88px,16vw,140px);border-radius:18px;border:4px solid #081030;background:#2a3f8f;color:#fff;font-weight:bold;cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;box-shadow:0 6px 0 #081030;transition:.15s}
+.side-btn:hover{transform:translateY(-3px);background:#33489e}
+.side-btn .big{font-size:2rem}
+.play-btn{width:clamp(110px,22vw,170px);height:clamp(110px,22vw,170px);border-radius:50%;border:6px solid #081030;background:radial-gradient(circle at 35% 30%,#4a7dff,#1d3fa8);font-size:3rem;color:#fff;cursor:pointer;box-shadow:0 8px 0 #081030,inset 0 -8px 0 rgba(0,0,0,.25);transition:.15s}
+.play-btn:hover{transform:scale(1.06)}
+.hint{text-align:center;color:#9fb4e8;font-size:.82rem;margin-top:18px}
+.car-row{display:flex;gap:12px;align-items:center;justify-content:center}
+.arrow{width:clamp(48px,12vw,64px);height:clamp(48px,12vw,64px);border-radius:14px;border:4px solid #081030;background:#2a3f8f;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 5px 0 #081030;flex-shrink:0}
+.lvl-card{width:min(430px,64vw);border-radius:18px;border:5px solid #081030;padding:20px 14px;text-align:center;box-shadow:0 6px 0 #081030}
+.lvl-card .num{font-size:.85rem;opacity:.85}
+.lvl-card .nm{font-size:clamp(1.1rem,4vw,1.6rem);font-weight:bold;margin:6px 0 8px}
+.lvl-card .stats{font-size:.85rem;opacity:.92;line-height:1.5}
+.r-blue{background:#1565c0}.r-green{background:#2e7d32}.r-yellow{background:#f9a825;color:#3e2723}.r-purple{background:#6a1b9a}.r-red{background:#8e0000}
+.btn{background:#43a047;color:#fff;font-weight:bold;border:none;border-radius:10px;padding:13px 22px;cursor:pointer;font-size:1rem;margin:5px;box-shadow:0 4px 0 #1b5e20}
+.btn:hover{filter:brightness(1.1)}
+.btn.alt{background:#2a3f8f;box-shadow:0 4px 0 #081030}
+.btn.warn{background:#f9a825;color:#3e2723;box-shadow:0 4px 0 #8a6300}
+.btn.danger{background:#c62828;box-shadow:0 4px 0 #7f1010}
+#game{padding:6px;justify-content:flex-start}
+#game .hud{display:flex;align-items:center;gap:8px;margin-bottom:4px;width:100%}
+.bar{flex:1;height:14px;background:rgba(0,0,0,.4);border:2px solid #081030;border-radius:10px;overflow:hidden}
+#bar-fill{height:100%;width:0;background:linear-gradient(90deg,#43a047,#ffd54f)}
+#hud-text{font-size:.8rem;color:#cfe0ff;white-space:nowrap}
+.hud-btn{background:#2a3f8f;border:3px solid #081030;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:bold;font-size:1rem;flex-shrink:0}
+#cvwrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0}
+#cv{display:block;border:3px solid #081030;border-radius:8px;background:#0e1440;touch-action:none;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(5,8,25,.85);align-items:center;justify-content:center;z-index:50}
+.overlay.show{display:flex}
+.win-box{background:#22307a;border:4px solid #ffd54f;border-radius:16px;padding:24px;text-align:center;max-width:400px;width:92%}
+.win-box h2{margin-bottom:10px}
+.win-box p{color:#cfe0ff;margin-bottom:14px;font-size:.9rem}
+.btn-col{display:flex;flex-direction:column;gap:9px;align-items:stretch}
+.edcard{background:rgba(0,0,0,.25);border:3px solid #081030;border-radius:14px;padding:12px;margin-bottom:10px;width:min(760px,96vw)}
+.edcard h3{margin-bottom:8px;font-size:1rem}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tab{background:#2a3f8f;border:3px solid #081030;color:#fff;border-radius:8px;padding:7px 11px;font-weight:bold;cursor:pointer;font-size:.82rem}
+.tab.sel{background:#f9a825;color:#3e2723}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,58px);gap:8px;justify-content:center}
+.slot{width:58px;height:58px;border-radius:10px;border:3px solid #081030;background:#151b33;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.slot.sel{border-color:#ffd54f;background:#33489e;box-shadow:0 0 12px rgba(255,213,79,.5)}
+.slot.locked{opacity:.45;cursor:default}
+.slot .lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:rgba(0,0,0,.35)}
+.rare{position:absolute;top:1px;right:4px;font-size:.65rem}
+.swatches{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}
+.sw{width:32px;height:32px;border-radius:8px;border:3px solid #081030;cursor:pointer}
+.sw.sel{border-color:#fff;transform:scale(1.15)}
+.preview-row{display:flex;align-items:center;justify-content:center;gap:40px;margin:10px 0}
+.preview-row canvas{background:rgba(0,0,0,.25);border-radius:12px;border:3px solid #081030}
+.orbchip{background:rgba(0,0,0,.35);border:3px solid #ffd54f;border-radius:20px;padding:6px 14px;font-weight:bold;color:#ffd54f;font-size:1rem}
+.sign{width:min(340px,80vw);height:120px;background:#9e9e9e;border:4px solid #5a4a2a;border-radius:8px;margin:8px auto}
+.cases{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.case{width:min(150px,40vw);border-radius:14px;border:4px solid #081030;padding:12px;text-align:center;cursor:pointer;box-shadow:0 5px 0 #081030;color:#fff;font-weight:bold}
+.case:hover{transform:translateY(-3px)}
+.case .cn{font-size:2rem}.case .price{font-size:.8rem;opacity:.9;margin-top:4px}
+.c-normal{background:#546e7a}.c-uncommon{background:#2e7d32}.c-rare{background:#1565c0}.c-mythic{background:#6a1b9a}
+#shop-result{min-height:70px;text-align:center;margin:8px 0;color:#ffd54f;font-weight:bold}
+.pal{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:96vw;margin-bottom:8px}
+.pbtn{background:#2a3f8f;border:3px solid #081030;color:#fff;border-radius:8px;padding:6px 9px;font-weight:bold;cursor:pointer;font-size:.72rem}
+.pbtn.sel{background:#f9a825;color:#3e2723}
+#ecv{border:3px solid #081030;border-radius:8px;background:#0e1440;width:min(96vw,760px);touch-action:none;cursor:crosshair}
+.edrow{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div id="menu" class="screen active">
+  <h1>WUBBLE DASH</h1>
+  <p class="sub">Прыгай, летай, выживай! · Орбов: <b id="menu-orbs" style="color:#ffd54f">0</b> 🔮</p>
+  <div class="row">
+    <button class="side-btn" onclick="openEditor()"><span class="big">😎</span>Иконки</button>
+    <button class="play-btn" onclick="showLevels()">▶</button>
+    <button class="side-btn" onclick="openEditorLvl()"><span class="big">🛠️</span>Редактор</button>
+    <button class="side-btn" onclick="openShop()"><span class="big">🏪</span>Шоп</button>
+  </div>
+  <p class="hint">ПРОБЕЛ / ↑ / клик / тап — прыжок · удерживай для полёта</p>
+</div>
+
+<div id="levels" class="screen">
+  <h1>Выбери уровень</h1>
+  <p class="sub">Орбов: <b id="lvl-orbs" style="color:#ffd54f">0</b> 🔮</p>
+  <div class="car-row">
+    <button class="arrow" onclick="carMove(-1)">←</button>
+    <div class="lvl-card" id="lvl-card"></div>
+    <button class="arrow" onclick="carMove(1)">→</button>
+  </div>
+  <div style="margin-top:16px"><button class="btn" style="font-size:1.15rem;padding:15px 30px" onclick="startLevel(carIdx)">▶ Играть</button></div>
+  <button class="btn alt" onclick="show('menu')">← Назад</button>
+</div>
+
+<div id="icons" class="screen">
+  <h1>😎 Иконки</h1>
+  <div class="edcard">
+    <h3>Режим</h3><div class="tabs" id="mode-tabs"></div>
+    <h3>Страница <span id="page-info"></span></h3>
+    <div class="tabs" id="page-nav"></div>
+    <h3>Иконка <span id="rare-note" style="font-size:.75rem;color:#ffd54f"></span></h3>
+    <div class="grid" id="icon-grid"></div>
+    <h3>Цвет <span style="font-size:.75rem;color:#9fb4e8">(красит и картинку из папки img)</span></h3>
+    <div class="swatches" id="swatches"></div>
+    <div class="preview-row">
+      <canvas id="prev-ship" width="120" height="120"></canvas>
+      <canvas id="prev-cube" width="120" height="120"></canvas>
+    </div>
+  </div>
+  <button class="btn alt" onclick="backToMenu()">← В меню</button>
+</div>
+
+<div id="shop" class="screen">
+  <h1>🏪 Шоп</h1>
+  <div class="orbchip">Орбы: <span id="shop-orbs">0</span> 🔮</div>
+  <div class="sign"></div>
+  <p class="sub" id="shop-hint">Продавец появится позже… а пока кейсы!</p>
+  <h3>Кейсы</h3>
+  <div class="cases" id="shop-cases"></div>
+  <div id="shop-result"></div>
+  <button class="btn alt" onclick="backToMenu()">← В меню</button>
+</div>
+
+<div id="editor" class="screen">
+  <h1>🛠️ Редактор</h1>
+  <p class="sub" id="ed-status"></p>
+  <div id="ed-choose-slot"></div>
+  <div class="edcard"><div class="tabs" id="palette-tabs"></div><div class="pal" id="palette"></div></div>
+  <canvas id="ecv" width="960" height="480"></canvas>
+  <div class="edrow">
+    <button class="btn" onclick="edTest()">▶ Тест</button>
+    <button class="btn" onclick="edSave()">💾 Сохранить</button>
+    <button class="btn warn" onclick="edClear()">🧹 Очистить</button>
+    <button class="btn alt" onclick="backToMenu()">← В меню</button>
+  </div>
+  <p class="hint" style="margin-top:10px">Клик — поставить · ❌ — стереть · R — повернуть выбранное колесо · цвет фона — вкладка «Декор»</p>
+</div>
+
+<div id="game" class="screen">
+  <div class="hud">
+    <div class="bar"><div id="bar-fill"></div></div>
+    <div id="hud-text"></div>
+    <button class="hud-btn" onclick="pickMusic()">🎵</button>
+    <button class="hud-btn" onclick="openPause()">⏸</button>
+    <button class="hud-btn" onclick="toggleFS()">⛶</button>
+  </div>
+  <div id="cvwrap"><canvas id="cv" width="960" height="480"></canvas></div>
+</div>
+
+<div id="pause" class="overlay">
+  <div class="win-box">
+    <h2>⏸ Пауза</h2><p id="pause-info"></p>
+    <div class="btn-col">
+      <button class="btn" onclick="closePause()">▶ Продолжить</button>
+      <button class="btn warn" id="pr-btn" onclick="togglePractice()">🏁 Практика: выкл</button>
+      <button class="btn alt" onclick="restartLevel()">↻ Заново</button>
+      <button class="btn alt" onclick="quitToMenu()">✕ В меню</button>
+    </div>
+  </div>
+</div>
+
+<div id="win-overlay" class="overlay">
+  <div class="win-box">
+    <h2>🎉 УРОВЕНЬ ПРОЙДЕН!</h2><p id="win-stats"></p>
+    <div class="btn-col"><button class="btn" onclick="restartLevel()">Ещё раз</button><button class="btn alt" onclick="quitToMenu()">В меню</button></div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
